@@ -1,0 +1,1437 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中际联合波段跟踪表</title>
+  <style>
+    :root {
+      --bg: #f3f5f7;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #d9e0e8;
+      --blue: #2457a6;
+      --cyan: #0e7490;
+      --green: #138a57;
+      --red: #c93535;
+      --amber: #a86600;
+      --shadow: 0 8px 24px rgba(20, 31, 52, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--cyan);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 800;
+    }
+
+    h1 span {
+      margin-left: 8px;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .clock {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .switch input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--blue);
+    }
+
+    .button {
+      border: 1px solid #1f4c92;
+      border-radius: 7px;
+      background: var(--blue);
+      color: #fff;
+      padding: 8px 13px;
+      cursor: pointer;
+      min-width: 88px;
+    }
+
+    .button:hover {
+      background: #1f4c92;
+    }
+
+    .notice {
+      margin: 0 0 14px;
+      border: 1px solid #ead69c;
+      border-radius: 8px;
+      background: #fff8e8;
+      color: #715014;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .quote-grid {
+      display: grid;
+      grid-template-columns: minmax(230px, 1.4fr) repeat(6, minmax(128px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      min-height: 94px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 13px 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric.primary {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #fbfcff;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.2;
+      min-height: 18px;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.05;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .metric.primary .metric-value {
+      font-size: 42px;
+    }
+
+    .metric-sub {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .up {
+      color: var(--red);
+    }
+
+    .down {
+      color: var(--green);
+    }
+
+    .flat {
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 1.2fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 13px 14px;
+      box-shadow: var(--shadow);
+      min-height: 86px;
+    }
+
+    .status-card h2,
+    .section h2 {
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .badge.green {
+      background: var(--green);
+    }
+
+    .badge.red {
+      background: var(--red);
+    }
+
+    .badge.amber {
+      background: var(--amber);
+    }
+
+    .summary-line {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .field input {
+      width: 78px;
+      border: 1px solid #c7d1df;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 6px 7px;
+      text-align: right;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.8fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 9px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f4f7fb;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 7px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tag.buy {
+      background: var(--green);
+    }
+
+    .tag.hold {
+      background: var(--blue);
+    }
+
+    .tag.sell {
+      background: var(--red);
+    }
+
+    .tag.watch {
+      background: var(--amber);
+    }
+
+    .chart-box {
+      display: grid;
+      grid-template-rows: 320px 180px;
+      gap: 12px;
+    }
+
+    .chart-panel {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fcfdff;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .side-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      padding: 9px 0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .kv:last-child {
+      border-bottom: none;
+    }
+
+    .kv span:first-child {
+      color: var(--muted);
+    }
+
+    .kv strong {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    @media (max-width: 1180px) {
+      .quote-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .metric.primary {
+        grid-column: span 2;
+      }
+
+      .status-row,
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        width: min(100% - 20px, 1440px);
+        padding-top: 14px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .quote-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric.primary {
+        grid-column: span 2;
+      }
+
+      .metric.primary .metric-value {
+        font-size: 36px;
+      }
+
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-box {
+        grid-template-rows: 260px 160px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">A股波段跟踪表</p>
+        <h1>中际联合 <span>605305.SH</span></h1>
+        <p class="clock" id="clock">等待行情...</p>
+      </div>
+      <div class="toolbar">
+        <label class="switch">
+          <input id="autoRefresh" type="checkbox" checked />
+          自动刷新
+        </label>
+        <button class="button" id="refreshBtn" type="button">刷新数据</button>
+      </div>
+    </header>
+
+    <p class="notice">仅作个人跟踪和规则化复盘，不构成投资建议。买卖点按价格、RSI、均线、估值参数自动生成，需要结合仓位、公告和市场环境确认。</p>
+
+    <section class="quote-grid" aria-label="实时行情">
+      <article class="metric primary">
+        <div class="metric-label">实时股价</div>
+        <div class="metric-value" id="price">--</div>
+        <div class="metric-sub" id="change">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">今日高低</div>
+        <div class="metric-value" id="dayRange">--</div>
+        <div class="metric-sub" id="openPrev">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">成交额</div>
+        <div class="metric-value" id="amount">--</div>
+        <div class="metric-sub" id="volume">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">RSI14</div>
+        <div class="metric-value" id="rsi14">--</div>
+        <div class="metric-sub" id="rsiTrend">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">合理估值</div>
+        <div class="metric-value" id="fairValue">--</div>
+        <div class="metric-sub" id="peInfo">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">理想买点</div>
+        <div class="metric-value" id="idealBuy">--</div>
+        <div class="metric-sub" id="buyZone">--</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">上涨空间</div>
+        <div class="metric-value" id="upside">--</div>
+        <div class="metric-sub" id="riskRoom">--</div>
+      </article>
+    </section>
+
+    <section class="status-row">
+      <article class="status-card">
+        <h2>当前动作</h2>
+        <span class="badge" id="signalBadge">等待数据</span>
+        <p class="summary-line" id="signalText">--</p>
+      </article>
+      <article class="status-card">
+        <h2>关键价位</h2>
+        <p class="summary-line" id="levelsText">--</p>
+      </article>
+      <article class="status-card">
+        <h2>参数</h2>
+        <div class="settings">
+          <label class="field">目标PE <input id="targetPe" type="number" min="12" max="35" step="0.5" value="22" /></label>
+          <label class="field">安全边际 <input id="safetyMargin" type="number" min="0" max="30" step="1" value="12" /></label>
+          <label class="field">计划仓位 <input id="planSize" type="number" min="5" max="100" step="5" value="30" /></label>
+        </div>
+      </article>
+    </section>
+
+    <div class="grid-main">
+      <section class="section">
+        <h2>买卖点表格</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>触发价位</th>
+                <th>RSI动态</th>
+                <th>动作</th>
+                <th>风控</th>
+              </tr>
+            </thead>
+            <tbody id="tradeRows">
+              <tr><td colspan="5">等待数据...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside>
+        <section class="section">
+          <h2>估值与空间</h2>
+          <div class="side-list" id="valuationList"></div>
+        </section>
+        <section class="section">
+          <h2>RSI动态变化</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>周期</th>
+                  <th>当前</th>
+                  <th>变化</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="rsiRows">
+                <tr><td colspan="4">等待数据...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="section">
+      <h2>价格与RSI</h2>
+      <div class="chart-box">
+        <div class="chart-panel"><canvas id="priceChart"></canvas></div>
+        <div class="chart-panel"><canvas id="rsiChart"></canvas></div>
+      </div>
+    </section>
+
+    <p class="footer" id="sourceLine">数据源：东方财富公开行情接口</p>
+  </main>
+
+  <script>
+    const STOCK = {
+      secid: "1.605305",
+      code: "605305",
+      name: "中际联合"
+    };
+
+    const API_TOKEN = "fa5fd1943c7b386f172d6893dbfba10b";
+    const QUOTE_FIELDS = [
+      "f43", "f44", "f45", "f46", "f47", "f48", "f50", "f51", "f52",
+      "f57", "f58", "f60", "f86", "f116", "f117", "f162", "f167",
+      "f168", "f169", "f170", "f171"
+    ].join(",");
+    const KLINE_FIELDS_1 = "f1,f2,f3,f4,f5,f6";
+    const KLINE_FIELDS_2 = "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61";
+
+    const state = {
+      quote: null,
+      klines: [],
+      indicators: null,
+      refreshTimer: null
+    };
+
+    const els = {
+      autoRefresh: document.getElementById("autoRefresh"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      targetPe: document.getElementById("targetPe"),
+      safetyMargin: document.getElementById("safetyMargin"),
+      planSize: document.getElementById("planSize"),
+      clock: document.getElementById("clock"),
+      price: document.getElementById("price"),
+      change: document.getElementById("change"),
+      dayRange: document.getElementById("dayRange"),
+      openPrev: document.getElementById("openPrev"),
+      amount: document.getElementById("amount"),
+      volume: document.getElementById("volume"),
+      rsi14: document.getElementById("rsi14"),
+      rsiTrend: document.getElementById("rsiTrend"),
+      fairValue: document.getElementById("fairValue"),
+      peInfo: document.getElementById("peInfo"),
+      idealBuy: document.getElementById("idealBuy"),
+      buyZone: document.getElementById("buyZone"),
+      upside: document.getElementById("upside"),
+      riskRoom: document.getElementById("riskRoom"),
+      signalBadge: document.getElementById("signalBadge"),
+      signalText: document.getElementById("signalText"),
+      levelsText: document.getElementById("levelsText"),
+      tradeRows: document.getElementById("tradeRows"),
+      valuationList: document.getElementById("valuationList"),
+      rsiRows: document.getElementById("rsiRows"),
+      sourceLine: document.getElementById("sourceLine"),
+      priceChart: document.getElementById("priceChart"),
+      rsiChart: document.getElementById("rsiChart")
+    };
+
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const callbackName = `eastmoney_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement("script");
+        const cleanup = () => {
+          delete window[callbackName];
+          script.remove();
+        };
+        const timer = window.setTimeout(() => {
+          cleanup();
+          reject(new Error("行情接口超时"));
+        }, 15000);
+
+        window[callbackName] = (payload) => {
+          window.clearTimeout(timer);
+          cleanup();
+          resolve(payload);
+        };
+
+        script.onerror = () => {
+          window.clearTimeout(timer);
+          cleanup();
+          reject(new Error("行情接口加载失败"));
+        };
+
+        script.src = `${url}&cb=${callbackName}&_=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    function quoteUrl() {
+      return `https://push2.eastmoney.com/api/qt/stock/get?ut=${API_TOKEN}&invt=2&fltt=2&secid=${STOCK.secid}&fields=${encodeURIComponent(QUOTE_FIELDS)}`;
+    }
+
+    function klineUrl() {
+      return `https://push2his.eastmoney.com/api/qt/stock/kline/get?ut=${API_TOKEN}&fields1=${encodeURIComponent(KLINE_FIELDS_1)}&fields2=${encodeURIComponent(KLINE_FIELDS_2)}&secid=${STOCK.secid}&klt=101&fqt=1&beg=20250101&end=20500101&lmt=260`;
+    }
+
+    function toNum(value) {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    }
+
+    function round(value, digits = 2) {
+      if (!Number.isFinite(value)) return null;
+      const factor = 10 ** digits;
+      return Math.round(value * factor) / factor;
+    }
+
+    function fmtPrice(value) {
+      return Number.isFinite(value) ? value.toFixed(2) : "--";
+    }
+
+    function fmtOne(value) {
+      return Number.isFinite(value) ? value.toFixed(1) : "--";
+    }
+
+    function fmtPct(value) {
+      if (!Number.isFinite(value)) return "--";
+      const sign = value > 0 ? "+" : "";
+      return `${sign}${value.toFixed(2)}%`;
+    }
+
+    function fmtSigned(value) {
+      if (!Number.isFinite(value)) return "--";
+      const sign = value > 0 ? "+" : "";
+      return `${sign}${value.toFixed(2)}`;
+    }
+
+    function fmtMoney(value) {
+      if (!Number.isFinite(value)) return "--";
+      if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(2)}亿`;
+      if (Math.abs(value) >= 10000) return `${(value / 10000).toFixed(2)}万`;
+      return value.toFixed(0);
+    }
+
+    function fmtVolume(value) {
+      if (!Number.isFinite(value)) return "--";
+      if (Math.abs(value) >= 10000) return `${(value / 10000).toFixed(2)}万手`;
+      return `${value.toFixed(0)}手`;
+    }
+
+    function formatTime(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "--";
+      return date.toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
+    }
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = `${date.getMonth() + 1}`.padStart(2, "0");
+      const day = `${date.getDate()}`.padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseQuote(payload) {
+      const data = payload && payload.data ? payload.data : {};
+      const price = toNum(data.f43);
+      const prevClose = toNum(data.f60);
+      return {
+        price,
+        high: toNum(data.f44),
+        low: toNum(data.f45),
+        open: toNum(data.f46),
+        volume: toNum(data.f47),
+        amount: toNum(data.f48),
+        turnover: toNum(data.f50),
+        upLimit: toNum(data.f51),
+        downLimit: toNum(data.f52),
+        code: data.f57 || STOCK.code,
+        name: data.f58 || STOCK.name,
+        prevClose,
+        timestamp: data.f86 ? new Date(Number(data.f86) * 1000) : new Date(),
+        marketCap: toNum(data.f116 || data.f117),
+        pe: toNum(data.f162),
+        pb: toNum(data.f167),
+        volumeRatio: toNum(data.f168),
+        change: toNum(data.f169) ?? (Number.isFinite(price) && Number.isFinite(prevClose) ? price - prevClose : null),
+        changePct: toNum(data.f170) ?? (Number.isFinite(price) && Number.isFinite(prevClose) ? (price / prevClose - 1) * 100 : null),
+        amplitude: toNum(data.f171)
+      };
+    }
+
+    function parseKlines(payload) {
+      const lines = payload && payload.data && Array.isArray(payload.data.klines) ? payload.data.klines : [];
+      return lines.map((line) => {
+        const parts = line.split(",");
+        return {
+          date: parts[0],
+          open: toNum(parts[1]),
+          close: toNum(parts[2]),
+          high: toNum(parts[3]),
+          low: toNum(parts[4]),
+          volume: toNum(parts[5]),
+          amount: toNum(parts[6]),
+          amplitude: toNum(parts[7]),
+          changePct: toNum(parts[8]),
+          change: toNum(parts[9]),
+          turnover: toNum(parts[10])
+        };
+      }).filter((item) => Number.isFinite(item.close));
+    }
+
+    function mergeQuoteIntoKlines(klines, quote) {
+      if (!quote || !Number.isFinite(quote.price) || !klines.length) return klines.slice();
+      const merged = klines.slice();
+      const quoteDate = formatDate(quote.timestamp);
+      const last = { ...merged[merged.length - 1] };
+
+      if (last.date === quoteDate) {
+        last.close = quote.price;
+        if (Number.isFinite(quote.open)) last.open = quote.open;
+        if (Number.isFinite(quote.high)) last.high = quote.high;
+        if (Number.isFinite(quote.low)) last.low = quote.low;
+        if (Number.isFinite(quote.volume)) last.volume = quote.volume;
+        if (Number.isFinite(quote.amount)) last.amount = quote.amount;
+        if (Number.isFinite(quote.changePct)) last.changePct = quote.changePct;
+        if (Number.isFinite(quote.change)) last.change = quote.change;
+        if (Number.isFinite(quote.turnover)) last.turnover = quote.turnover;
+        merged[merged.length - 1] = last;
+      }
+
+      return merged;
+    }
+
+    function sma(values, period) {
+      const result = Array(values.length).fill(null);
+      let sum = 0;
+      for (let i = 0; i < values.length; i += 1) {
+        sum += values[i];
+        if (i >= period) sum -= values[i - period];
+        if (i >= period - 1) result[i] = sum / period;
+      }
+      return result;
+    }
+
+    function rsiSeries(values, period) {
+      const result = Array(values.length).fill(null);
+      if (values.length <= period) return result;
+      let gain = 0;
+      let loss = 0;
+
+      for (let i = 1; i <= period; i += 1) {
+        const delta = values[i] - values[i - 1];
+        if (delta >= 0) gain += delta;
+        else loss -= delta;
+      }
+
+      let avgGain = gain / period;
+      let avgLoss = loss / period;
+      result[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+
+      for (let i = period + 1; i < values.length; i += 1) {
+        const delta = values[i] - values[i - 1];
+        const up = Math.max(delta, 0);
+        const down = Math.max(-delta, 0);
+        avgGain = ((avgGain * (period - 1)) + up) / period;
+        avgLoss = ((avgLoss * (period - 1)) + down) / period;
+        result[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+      }
+
+      return result;
+    }
+
+    function lastValid(series, offset = 0) {
+      let found = 0;
+      for (let i = series.length - 1; i >= 0; i -= 1) {
+        if (Number.isFinite(series[i])) {
+          if (found === offset) return series[i];
+          found += 1;
+        }
+      }
+      return null;
+    }
+
+    function average(values) {
+      const valid = values.filter(Number.isFinite);
+      if (!valid.length) return null;
+      return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+    }
+
+    function calcAtr(klines, period = 14) {
+      if (klines.length <= period) return null;
+      const ranges = [];
+      for (let i = 1; i < klines.length; i += 1) {
+        const item = klines[i];
+        const prev = klines[i - 1];
+        ranges.push(Math.max(
+          item.high - item.low,
+          Math.abs(item.high - prev.close),
+          Math.abs(item.low - prev.close)
+        ));
+      }
+      return average(ranges.slice(-period));
+    }
+
+    function getSettings() {
+      return {
+        targetPe: Number(els.targetPe.value) || 22,
+        safetyMargin: Number(els.safetyMargin.value) || 12,
+        planSize: Number(els.planSize.value) || 30
+      };
+    }
+
+    function saveSettings() {
+      window.localStorage.setItem("zju_wave_settings", JSON.stringify(getSettings()));
+    }
+
+    function loadSettings() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem("zju_wave_settings"));
+        if (saved && Number.isFinite(saved.targetPe)) els.targetPe.value = saved.targetPe;
+        if (saved && Number.isFinite(saved.safetyMargin)) els.safetyMargin.value = saved.safetyMargin;
+        if (saved && Number.isFinite(saved.planSize)) els.planSize.value = saved.planSize;
+      } catch (error) {
+        window.localStorage.removeItem("zju_wave_settings");
+      }
+    }
+
+    function rsiZone(value) {
+      if (!Number.isFinite(value)) return "等待";
+      if (value < 30) return "超卖";
+      if (value < 40) return "弱修复";
+      if (value < 55) return "中性";
+      if (value < 70) return "强势";
+      return "超买";
+    }
+
+    function trendWord(current, previous) {
+      if (!Number.isFinite(current) || !Number.isFinite(previous)) return "等待";
+      const diff = current - previous;
+      if (diff > 1) return "走强";
+      if (diff < -1) return "走弱";
+      return "横盘";
+    }
+
+    function pctRoom(target, price) {
+      if (!Number.isFinite(target) || !Number.isFinite(price) || price === 0) return null;
+      return (target / price - 1) * 100;
+    }
+
+    function classifyChange(value) {
+      if (!Number.isFinite(value) || value === 0) return "flat";
+      return value > 0 ? "up" : "down";
+    }
+
+    function buildIndicators() {
+      const quote = state.quote;
+      const merged = mergeQuoteIntoKlines(state.klines, quote);
+      if (!merged.length) return null;
+
+      const settings = getSettings();
+      const closes = merged.map((item) => item.close);
+      const ma5 = sma(closes, 5);
+      const ma10 = sma(closes, 10);
+      const ma20 = sma(closes, 20);
+      const ma60 = sma(closes, 60);
+      const rsi6 = rsiSeries(closes, 6);
+      const rsi12 = rsiSeries(closes, 12);
+      const rsi14 = rsiSeries(closes, 14);
+      const rsi24 = rsiSeries(closes, 24);
+      const latest = merged[merged.length - 1];
+      const price = Number.isFinite(quote && quote.price) ? quote.price : latest.close;
+      const recent20 = merged.slice(-20);
+      const recent60 = merged.slice(-60);
+      const high20 = Math.max(...recent20.map((item) => item.high));
+      const low20 = Math.min(...recent20.map((item) => item.low));
+      const high60 = Math.max(...recent60.map((item) => item.high));
+      const low60 = Math.min(...recent60.map((item) => item.low));
+      const atr = calcAtr(merged, 14) || price * 0.035;
+      const ma20Now = lastValid(ma20);
+      const ma60Now = lastValid(ma60);
+      const trendSupport = Math.max(
+        Number.isFinite(ma20Now) ? ma20Now : low20,
+        low20
+      );
+      const deepSupport = Math.max(
+        Number.isFinite(ma60Now) ? ma60Now : low60,
+        low60
+      );
+      const buyLow = round(Math.max(deepSupport, trendSupport - atr * 0.65));
+      const buyHigh = round(trendSupport + atr * 0.25);
+      const stopLoss = round(Math.min(low20, deepSupport) - atr * 0.45);
+      const pe = quote ? quote.pe : null;
+      const eps = Number.isFinite(pe) && pe > 0 ? price / pe : null;
+      const fairLowPe = Math.max(14, settings.targetPe - 4);
+      const fairMidPe = (fairLowPe + settings.targetPe) / 2;
+      const fairLow = Number.isFinite(eps) ? round(eps * fairLowPe) : null;
+      const fairMid = Number.isFinite(eps) ? round(eps * fairMidPe) : null;
+      const fairHigh = Number.isFinite(eps) ? round(eps * settings.targetPe) : null;
+      const valuationBuy = Number.isFinite(fairMid) ? round(fairMid * (1 - settings.safetyMargin / 100)) : null;
+      const idealBuy = round(Math.min(
+        Number.isFinite(valuationBuy) ? valuationBuy : buyLow,
+        Number.isFinite(buyLow) ? buyLow : price
+      ));
+      const resistance1 = round(Math.max(high20, price + atr * 0.8));
+      const resistance2 = round(Math.max(high60, Number.isFinite(fairHigh) ? fairHigh : high60));
+      const rsiNow = lastValid(rsi14);
+      const rsiPrev = lastValid(rsi14, 1);
+      const currentStatus = getStatus({
+        price,
+        rsiNow,
+        rsiPrev,
+        buyLow,
+        buyHigh,
+        idealBuy,
+        stopLoss,
+        resistance1,
+        ma20Now
+      });
+
+      return {
+        merged,
+        price,
+        latest,
+        ma5,
+        ma10,
+        ma20,
+        ma60,
+        ma20Now,
+        ma60Now,
+        rsi: { 6: rsi6, 12: rsi12, 14: rsi14, 24: rsi24 },
+        rsiNow,
+        rsiPrev,
+        rsiDiff: Number.isFinite(rsiNow) && Number.isFinite(rsiPrev) ? rsiNow - rsiPrev : null,
+        atr,
+        high20,
+        low20,
+        high60,
+        low60,
+        buyLow,
+        buyHigh,
+        idealBuy,
+        stopLoss,
+        resistance1,
+        resistance2,
+        eps,
+        fairLowPe,
+        fairMidPe,
+        fairLow,
+        fairMid,
+        fairHigh,
+        valuationBuy,
+        settings,
+        status: currentStatus,
+        upsideToResistance: pctRoom(resistance1, price),
+        upsideToFairHigh: pctRoom(fairHigh, price),
+        downsideToStop: pctRoom(stopLoss, price)
+      };
+    }
+
+    function getStatus(data) {
+      const rsiTrend = Number.isFinite(data.rsiNow) && Number.isFinite(data.rsiPrev) ? data.rsiNow - data.rsiPrev : 0;
+
+      if (Number.isFinite(data.stopLoss) && data.price <= data.stopLoss) {
+        return {
+          label: "风控优先",
+          tone: "red",
+          text: `跌破风控线 ${fmtPrice(data.stopLoss)}，波段仓先退出，等待重新站回关键均线。`
+        };
+      }
+
+      if (Number.isFinite(data.resistance1) && data.price >= data.resistance1 * 0.985) {
+        return {
+          label: "分批止盈",
+          tone: "red",
+          text: `接近第一压力 ${fmtPrice(data.resistance1)}，若RSI继续走弱，适合降低波段仓。`
+        };
+      }
+
+      if (Number.isFinite(data.rsiNow) && data.rsiNow >= 70) {
+        return {
+          label: "高位控仓",
+          tone: "amber",
+          text: "RSI进入超买区，冲高不追，优先看分批兑现和回踩确认。"
+        };
+      }
+
+      if (Number.isFinite(data.idealBuy) && data.price <= data.idealBuy && data.rsiNow <= 45 && rsiTrend >= 0) {
+        return {
+          label: "理想买点",
+          tone: "green",
+          text: `价格进入理想买点 ${fmtPrice(data.idealBuy)} 附近，等待分时企稳后分批。`
+        };
+      }
+
+      if (Number.isFinite(data.buyHigh) && data.price <= data.buyHigh && data.rsiNow < 55) {
+        return {
+          label: "低吸观察",
+          tone: "green",
+          text: `价格靠近回踩区 ${fmtPrice(data.buyLow)}-${fmtPrice(data.buyHigh)}，适合小仓试错。`
+        };
+      }
+
+      if (Number.isFinite(data.ma20Now) && data.price >= data.ma20Now && data.rsiNow >= 45 && data.rsiNow < 68) {
+        return {
+          label: "持有观察",
+          tone: "blue",
+          text: "价格仍在趋势支撑上方，等待突破压力或回踩到买区。"
+        };
+      }
+
+      return {
+        label: "等待确认",
+        tone: "amber",
+        text: "当前没有清晰买卖触发，优先等待价格回到买区或放量突破。"
+      };
+    }
+
+    function render() {
+      const indicators = buildIndicators();
+      state.indicators = indicators;
+      if (!state.quote || !indicators) return;
+
+      renderQuote(indicators);
+      renderStatus(indicators);
+      renderTradeTable(indicators);
+      renderValuation(indicators);
+      renderRsiTable(indicators);
+      drawCharts(indicators);
+    }
+
+    function renderQuote(data) {
+      const quote = state.quote;
+      const cls = classifyChange(quote.changePct);
+      els.clock.textContent = `行情时间：${formatTime(quote.timestamp)}`;
+      els.price.textContent = fmtPrice(data.price);
+      els.price.className = `metric-value ${cls}`;
+      els.change.textContent = `${fmtSigned(quote.change)}  ${fmtPct(quote.changePct)}  振幅 ${fmtPct(quote.amplitude)}`;
+      els.change.className = `metric-sub ${cls}`;
+      els.dayRange.textContent = `${fmtPrice(quote.low)} - ${fmtPrice(quote.high)}`;
+      els.openPrev.textContent = `开 ${fmtPrice(quote.open)} / 昨收 ${fmtPrice(quote.prevClose)}`;
+      els.amount.textContent = fmtMoney(quote.amount);
+      els.volume.textContent = `${fmtVolume(quote.volume)} / 换手 ${fmtPct(quote.turnover)}`;
+      els.rsi14.textContent = fmtOne(data.rsiNow);
+      els.rsiTrend.textContent = `${rsiZone(data.rsiNow)}，${trendWord(data.rsiNow, data.rsiPrev)} ${fmtSigned(data.rsiDiff)}`;
+      els.fairValue.textContent = `${fmtPrice(data.fairLow)} - ${fmtPrice(data.fairHigh)}`;
+      els.peInfo.textContent = `PE ${fmtOne(quote.pe)} / PB ${fmtOne(quote.pb)}`;
+      els.idealBuy.textContent = fmtPrice(data.idealBuy);
+      els.buyZone.textContent = `回踩区 ${fmtPrice(data.buyLow)} - ${fmtPrice(data.buyHigh)}`;
+      els.upside.textContent = fmtPct(data.upsideToFairHigh);
+      els.riskRoom.textContent = `到第一压力 ${fmtPct(data.upsideToResistance)} / 风控 ${fmtPct(data.downsideToStop)}`;
+      els.sourceLine.textContent = `数据源：东方财富公开行情接口，最新刷新 ${formatTime(new Date())}`;
+    }
+
+    function renderStatus(data) {
+      els.signalBadge.textContent = data.status.label;
+      els.signalBadge.className = `badge ${data.status.tone}`;
+      els.signalText.textContent = data.status.text;
+      els.levelsText.textContent = [
+        `理想买点 ${fmtPrice(data.idealBuy)}`,
+        `回踩区 ${fmtPrice(data.buyLow)}-${fmtPrice(data.buyHigh)}`,
+        `第一压力 ${fmtPrice(data.resistance1)}`,
+        `估值目标 ${fmtPrice(data.fairHigh)}`,
+        `风控线 ${fmtPrice(data.stopLoss)}`
+      ].join(" ｜ ");
+    }
+
+    function renderTradeTable(data) {
+      const plan = data.settings.planSize;
+      const rows = [
+        {
+          tag: "buy",
+          scene: "理想买点",
+          price: `≤ ${fmtPrice(data.idealBuy)}`,
+          rsi: "RSI14 ≤ 45，且从走弱转为横盘或走强",
+          action: `分2-3笔建波段仓，首笔约计划仓位 ${Math.round(plan * 0.4)}%`,
+          risk: `收盘跌破 ${fmtPrice(data.stopLoss)} 或放量跌破60日线，先撤出波段仓`
+        },
+        {
+          tag: "buy",
+          scene: "回踩买点",
+          price: `${fmtPrice(data.buyLow)} - ${fmtPrice(data.buyHigh)}`,
+          rsi: "RSI14在40-55之间，不再创新低",
+          action: `企稳后加到计划仓位 ${plan}%，冲高不过压力不追`,
+          risk: `买入后不能重新站回 ${fmtPrice(data.buyLow)} 上方，降低仓位`
+        },
+        {
+          tag: "hold",
+          scene: "持有区",
+          price: `${fmtPrice(data.buyHigh)} - ${fmtPrice(data.resistance1)}`,
+          rsi: "RSI14在45-68之间，价格在20日线附近或上方",
+          action: "持有底仓，日内急拉不追，等待压力位或回踩区",
+          risk: `RSI跌破40且收盘低于 ${fmtPrice(data.buyLow)}，转为防守`
+        },
+        {
+          tag: "sell",
+          scene: "第一卖点",
+          price: `接近 ${fmtPrice(data.resistance1)}`,
+          rsi: "RSI14 ≥ 65后拐头，或量价背离",
+          action: "先减1/3波段仓，保留底仓观察能否突破",
+          risk: "突破后不立刻追回，等回踩不破压力再接回"
+        },
+        {
+          tag: "sell",
+          scene: "第二卖点",
+          price: `${fmtPrice(data.resistance2)} 附近`,
+          rsi: "RSI14 ≥ 70，或连续冲高收上影",
+          action: "再减1/3到1/2，剩余仓位用5日线跟踪",
+          risk: "强势突破后用移动止盈，避免一次性猜顶"
+        },
+        {
+          tag: "watch",
+          scene: "风控卖点",
+          price: `≤ ${fmtPrice(data.stopLoss)}`,
+          rsi: "RSI14 < 40且继续走弱",
+          action: "波段仓退出，等待下一次回踩企稳信号",
+          risk: "重新站回20日线且RSI修复后再纳入观察"
+        }
+      ];
+
+      els.tradeRows.innerHTML = rows.map((row) => `
+        <tr>
+          <td><span class="tag ${row.tag}">${row.scene}</span></td>
+          <td class="num">${row.price}</td>
+          <td>${row.rsi}</td>
+          <td>${row.action}</td>
+          <td>${row.risk}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderValuation(data) {
+      const quote = state.quote;
+      const items = [
+        ["当前市值", fmtMoney(quote.marketCap)],
+        ["PE / PB", `${fmtOne(quote.pe)} / ${fmtOne(quote.pb)}`],
+        ["估算EPS", fmtPrice(data.eps)],
+        ["估值PE区间", `${fmtOne(data.fairLowPe)}x - ${fmtOne(data.settings.targetPe)}x`],
+        ["合理估值", `${fmtPrice(data.fairLow)} - ${fmtPrice(data.fairHigh)}`],
+        ["估值中枢", fmtPrice(data.fairMid)],
+        ["安全边际买点", fmtPrice(data.valuationBuy)],
+        ["到估值上沿", fmtPct(data.upsideToFairHigh)],
+        ["到第一压力", fmtPct(data.upsideToResistance)],
+        ["到风控线", fmtPct(data.downsideToStop)]
+      ];
+
+      els.valuationList.innerHTML = items.map(([label, value]) => `
+        <div class="kv"><span>${label}</span><strong>${value}</strong></div>
+      `).join("");
+    }
+
+    function renderRsiTable(data) {
+      const periods = [6, 12, 14, 24];
+      els.rsiRows.innerHTML = periods.map((period) => {
+        const series = data.rsi[period];
+        const current = lastValid(series);
+        const previous = lastValid(series, 1);
+        const diff = Number.isFinite(current) && Number.isFinite(previous) ? current - previous : null;
+        const tagClass = current >= 70 ? "sell" : current <= 40 ? "buy" : current >= 55 ? "hold" : "watch";
+        return `
+          <tr>
+            <td class="num">RSI${period}</td>
+            <td class="num">${fmtOne(current)}</td>
+            <td class="num">${fmtSigned(diff)}</td>
+            <td><span class="tag ${tagClass}">${rsiZone(current)} / ${trendWord(current, previous)}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function setupCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    function drawCharts(data) {
+      drawPriceChart(data);
+      drawRsiChart(data);
+    }
+
+    function drawPriceChart(data) {
+      const { ctx, width, height } = setupCanvas(els.priceChart);
+      const pad = { left: 50, right: 72, top: 24, bottom: 32 };
+      const series = data.merged.slice(-90);
+      const ma20 = data.ma20.slice(-90);
+      const values = series.flatMap((item) => [item.high, item.low])
+        .concat(ma20.filter(Number.isFinite))
+        .concat([data.buyLow, data.buyHigh, data.resistance1, data.stopLoss].filter(Number.isFinite));
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = Math.max(max - min, 1);
+      const y = (value) => pad.top + (max - value) / span * (height - pad.top - pad.bottom);
+      const x = (index) => pad.left + index / Math.max(series.length - 1, 1) * (width - pad.left - pad.right);
+
+      clearCanvas(ctx, width, height);
+      drawGrid(ctx, width, height, pad);
+      drawPriceLine(ctx, series.map((item) => item.close), x, y, "#2457a6", 2);
+      drawPriceLine(ctx, ma20, x, y, "#0e7490", 1.5);
+      drawHorizontal(ctx, y(data.buyLow), pad.left, width - pad.right, "#138a57", `买区 ${fmtPrice(data.buyLow)}`);
+      drawHorizontal(ctx, y(data.resistance1), pad.left, width - pad.right, "#c93535", `压力 ${fmtPrice(data.resistance1)}`);
+      drawHorizontal(ctx, y(data.stopLoss), pad.left, width - pad.right, "#a86600", `风控 ${fmtPrice(data.stopLoss)}`);
+      drawAxisText(ctx, pad.left, height - 11, series[0].date.slice(5), "#5f6b7a", "left");
+      drawAxisText(ctx, width - pad.right, height - 11, series[series.length - 1].date.slice(5), "#5f6b7a", "right");
+      drawAxisText(ctx, width - 8, y(max), fmtPrice(max), "#5f6b7a", "right");
+      drawAxisText(ctx, width - 8, y(min), fmtPrice(min), "#5f6b7a", "right");
+      drawAxisText(ctx, 12, 18, "收盘价 / MA20", "#172033", "left", 13, true);
+    }
+
+    function drawRsiChart(data) {
+      const { ctx, width, height } = setupCanvas(els.rsiChart);
+      const pad = { left: 50, right: 52, top: 18, bottom: 28 };
+      const series = data.rsi[14].slice(-90);
+      const y = (value) => pad.top + (100 - value) / 100 * (height - pad.top - pad.bottom);
+      const x = (index) => pad.left + index / Math.max(series.length - 1, 1) * (width - pad.left - pad.right);
+
+      clearCanvas(ctx, width, height);
+      drawGrid(ctx, width, height, pad);
+      drawHorizontal(ctx, y(70), pad.left, width - pad.right, "#c93535", "70");
+      drawHorizontal(ctx, y(30), pad.left, width - pad.right, "#138a57", "30");
+      drawPriceLine(ctx, series, x, y, "#a86600", 2);
+      drawAxisText(ctx, 12, 18, "RSI14", "#172033", "left", 13, true);
+      drawAxisText(ctx, width - 8, y(data.rsiNow), fmtOne(data.rsiNow), "#172033", "right", 13, true);
+    }
+
+    function clearCanvas(ctx, width, height) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fcfdff";
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function drawGrid(ctx, width, height, pad) {
+      ctx.strokeStyle = "#e8edf3";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i += 1) {
+        const y = pad.top + i / 4 * (height - pad.top - pad.bottom);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(width - pad.right, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPriceLine(ctx, values, x, y, color, lineWidth) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      let started = false;
+      values.forEach((value, index) => {
+        if (!Number.isFinite(value)) return;
+        const px = x(index);
+        const py = y(value);
+        if (!started) {
+          ctx.moveTo(px, py);
+          started = true;
+        } else {
+          ctx.lineTo(px, py);
+        }
+      });
+      ctx.stroke();
+    }
+
+    function drawHorizontal(ctx, y, x1, x2, color, label) {
+      if (!Number.isFinite(y)) return;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = color;
+      ctx.font = "12px Microsoft YaHei, Arial";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, x2 - 4, y - 9);
+      ctx.restore();
+    }
+
+    function drawAxisText(ctx, x, y, text, color, align, size = 12, bold = false) {
+      ctx.fillStyle = color;
+      ctx.font = `${bold ? "700 " : ""}${size}px Microsoft YaHei, Arial`;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y);
+    }
+
+    async function refreshAll() {
+      els.refreshBtn.disabled = true;
+      els.refreshBtn.textContent = "刷新中";
+      try {
+        const [quotePayload, klinePayload] = await Promise.all([
+          jsonp(quoteUrl()),
+          jsonp(klineUrl())
+        ]);
+        state.quote = parseQuote(quotePayload);
+        state.klines = parseKlines(klinePayload);
+        render();
+      } catch (error) {
+        els.clock.textContent = `刷新失败：${error.message}`;
+      } finally {
+        els.refreshBtn.disabled = false;
+        els.refreshBtn.textContent = "刷新数据";
+      }
+    }
+
+    async function refreshQuoteOnly() {
+      try {
+        const quotePayload = await jsonp(quoteUrl());
+        state.quote = parseQuote(quotePayload);
+        render();
+      } catch (error) {
+        els.clock.textContent = `实时刷新失败：${error.message}`;
+      }
+    }
+
+    function startTimer() {
+      if (state.refreshTimer) window.clearInterval(state.refreshTimer);
+      state.refreshTimer = window.setInterval(() => {
+        if (els.autoRefresh.checked) refreshQuoteOnly();
+      }, 30000);
+    }
+
+    function bindEvents() {
+      els.refreshBtn.addEventListener("click", refreshAll);
+      [els.targetPe, els.safetyMargin, els.planSize].forEach((input) => {
+        input.addEventListener("change", () => {
+          saveSettings();
+          render();
+        });
+      });
+      window.addEventListener("resize", () => {
+        if (state.indicators) drawCharts(state.indicators);
+      });
+    }
+
+    loadSettings();
+    bindEvents();
+    startTimer();
+    refreshAll();
+  </script>
+</body>
+</html>
