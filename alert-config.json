@@ -1,0 +1,12 @@
+{
+  "checkMarketHours": true,
+  "cooldownMinutes": 120,
+  "stocks": [
+    {
+      "query": "605305",
+      "targetPe": 22,
+      "safetyMargin": 12,
+      "planSize": 30
+    }
+  ]
+}
