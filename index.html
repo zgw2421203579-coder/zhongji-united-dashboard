@@ -73,6 +73,13 @@
       font-weight: 600;
     }
 
+    h1 .title-name {
+      margin-left: 0;
+      color: var(--ink);
+      font-size: inherit;
+      font-weight: 800;
+    }
+
     .clock {
       margin: 7px 0 0;
       color: var(--muted);
@@ -85,6 +92,29 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 330px;
+    }
+
+    .search-input {
+      width: 230px;
+      min-height: 36px;
+      border: 1px solid #c7d1df;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36, 87, 166, 0.14);
     }
 
     .switch {
@@ -114,6 +144,11 @@
 
     .button:hover {
       background: #1f4c92;
+    }
+
+    .button:disabled {
+      cursor: wait;
+      opacity: 0.68;
     }
 
     .notice {
@@ -436,6 +471,16 @@
         justify-content: flex-start;
       }
 
+      .search-form {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .search-input {
+        flex: 1 1 auto;
+        width: auto;
+      }
+
       .quote-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -463,10 +508,14 @@
     <header class="topbar">
       <div>
         <p class="eyebrow">A股波段跟踪表</p>
-        <h1>中际联合 <span>605305.SH</span></h1>
+        <h1><span class="title-name" id="stockNameTitle">中际联合</span> <span id="stockCodeTitle">605305.SH</span></h1>
         <p class="clock" id="clock">等待行情...</p>
       </div>
       <div class="toolbar">
+        <form class="search-form" id="stockSearchForm">
+          <input class="search-input" id="stockSearchInput" type="search" autocomplete="off" placeholder="输入股票代码或公司名称" aria-label="输入股票代码或公司名称" />
+          <button class="button" id="stockSearchBtn" type="submit">查询</button>
+        </form>
         <label class="switch">
           <input id="autoRefresh" type="checkbox" checked />
           自动刷新
@@ -601,6 +650,7 @@
     };
 
     const API_TOKEN = "fa5fd1943c7b386f172d6893dbfba10b";
+    const SEARCH_TOKEN = "D43BF722C8F8913DDBCD4201D3CC4EBE";
     const QUOTE_FIELDS = [
       "f43", "f44", "f45", "f46", "f47", "f48", "f50", "f51", "f52",
       "f57", "f58", "f60", "f86", "f116", "f117", "f162", "f167",
@@ -617,6 +667,11 @@
     };
 
     const els = {
+      stockNameTitle: document.getElementById("stockNameTitle"),
+      stockCodeTitle: document.getElementById("stockCodeTitle"),
+      stockSearchForm: document.getElementById("stockSearchForm"),
+      stockSearchInput: document.getElementById("stockSearchInput"),
+      stockSearchBtn: document.getElementById("stockSearchBtn"),
       autoRefresh: document.getElementById("autoRefresh"),
       refreshBtn: document.getElementById("refreshBtn"),
       targetPe: document.getElementById("targetPe"),
@@ -676,6 +731,117 @@
         script.src = `${url}&cb=${callbackName}&_=${Date.now()}`;
         document.head.appendChild(script);
       });
+    }
+
+    function stockSearchUrl(query) {
+      return `https://searchapi.eastmoney.com/api/suggest/get?input=${encodeURIComponent(query)}&type=14&token=${SEARCH_TOKEN}&count=8`;
+    }
+
+    function marketSuffix(secid) {
+      const market = String(secid || "").split(".")[0];
+      if (market === "1") return "SH";
+      if (market === "0") return "SZ";
+      if (market === "2") return "BJ";
+      return "";
+    }
+
+    function stockLabel() {
+      const suffix = marketSuffix(STOCK.secid);
+      return suffix ? `${STOCK.code}.${suffix}` : STOCK.code;
+    }
+
+    function updateStockHeader() {
+      els.stockNameTitle.textContent = STOCK.name || "--";
+      els.stockCodeTitle.textContent = stockLabel();
+      document.title = `${STOCK.name || STOCK.code}波段跟踪表`;
+    }
+
+    function fallbackSecid(code) {
+      if (!code) return "";
+      const market = code.startsWith("6") ? "1" : "0";
+      return `${market}.${code}`;
+    }
+
+    function pickStockResult(rows, query) {
+      const normalized = query.replace(/\.(SH|SZ|BJ)$/i, "").trim().toUpperCase();
+      const candidates = rows.filter((row) => row && (row.QuoteID || row.Code || row.UnifiedCode));
+      const exactCode = candidates.find((row) => String(row.Code || row.UnifiedCode || "").toUpperCase() === normalized);
+      const exactName = candidates.find((row) => String(row.Name || "").trim() === query.trim());
+      const aStock = candidates.find((row) => row.Classify === "AStock" && (row.QuoteID || row.Code));
+      return exactCode || exactName || aStock || candidates[0] || null;
+    }
+
+    async function lookupStock(query) {
+      const cleanQuery = query.replace(/\.(SH|SZ|BJ)$/i, "").trim();
+      const payload = await jsonp(stockSearchUrl(cleanQuery));
+      const rows = payload && payload.QuotationCodeTable && Array.isArray(payload.QuotationCodeTable.Data)
+        ? payload.QuotationCodeTable.Data
+        : [];
+      const result = pickStockResult(rows, cleanQuery);
+      if (!result) {
+        throw new Error(`未找到股票：${query}`);
+      }
+      return result;
+    }
+
+    function resetDisplayForStock() {
+      state.quote = null;
+      state.klines = [];
+      state.indicators = null;
+      els.clock.textContent = `正在加载 ${STOCK.name}...`;
+      els.price.textContent = "--";
+      els.change.textContent = "--";
+      els.dayRange.textContent = "--";
+      els.openPrev.textContent = "--";
+      els.amount.textContent = "--";
+      els.volume.textContent = "--";
+      els.rsi14.textContent = "--";
+      els.rsiTrend.textContent = "--";
+      els.fairValue.textContent = "--";
+      els.peInfo.textContent = "--";
+      els.idealBuy.textContent = "--";
+      els.buyZone.textContent = "--";
+      els.upside.textContent = "--";
+      els.riskRoom.textContent = "--";
+      els.signalBadge.textContent = "等待数据";
+      els.signalBadge.className = "badge";
+      els.signalText.textContent = "--";
+      els.levelsText.textContent = "--";
+      els.tradeRows.innerHTML = '<tr><td colspan="5">等待数据...</td></tr>';
+      els.valuationList.innerHTML = "";
+      els.rsiRows.innerHTML = '<tr><td colspan="4">等待数据...</td></tr>';
+    }
+
+    function applyStockResult(result) {
+      const code = String(result.Code || result.UnifiedCode || "").trim();
+      STOCK.secid = result.QuoteID || fallbackSecid(code);
+      STOCK.code = code || STOCK.code;
+      STOCK.name = result.Name || STOCK.code;
+      updateStockHeader();
+      resetDisplayForStock();
+    }
+
+    async function queryStock(event) {
+      event.preventDefault();
+      const query = els.stockSearchInput.value.trim();
+      if (!query) {
+        els.clock.textContent = "请输入股票代码或公司名称";
+        els.stockSearchInput.focus();
+        return;
+      }
+
+      els.stockSearchBtn.disabled = true;
+      els.stockSearchBtn.textContent = "查询中";
+      try {
+        const result = await lookupStock(query);
+        applyStockResult(result);
+        await refreshAll();
+      } catch (error) {
+        els.clock.textContent = `查询失败：${error.message}`;
+      } finally {
+        els.stockSearchBtn.disabled = false;
+        els.stockSearchBtn.textContent = "查询";
+      }
     }
 
     function quoteUrl() {
@@ -1119,6 +1285,11 @@
 
     function renderQuote(data) {
       const quote = state.quote;
+      if (quote.name && quote.code) {
+        STOCK.name = quote.name;
+        STOCK.code = quote.code;
+        updateStockHeader();
+      }
       const cls = classifyChange(quote.changePct);
       els.clock.textContent = `行情时间：${formatTime(quote.timestamp)}`;
       els.price.textContent = fmtPrice(data.price);
@@ -1416,6 +1587,7 @@
     }
 
     function bindEvents() {
+      els.stockSearchForm.addEventListener("submit", queryStock);
       els.refreshBtn.addEventListener("click", refreshAll);
       [els.targetPe, els.safetyMargin, els.planSize].forEach((input) => {
         input.addEventListener("change", () => {
@@ -1429,6 +1601,7 @@
     }
 
     loadSettings();
+    updateStockHeader();
     bindEvents();
     startTimer();
     refreshAll();
